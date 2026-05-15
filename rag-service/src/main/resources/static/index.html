@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jira RAG — Ticket Intelligence</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0d1117; color: #e6edf3; min-height: 100vh;
+    }
+    header {
+      background: #161b22; border-bottom: 1px solid #30363d;
+      padding: 16px 32px; display: flex; align-items: center; gap: 12px;
+    }
+    header .logo { font-size: 22px; font-weight: 700; color: #58a6ff; }
+    header .sub  { font-size: 13px; color: #8b949e; }
+    .container { max-width: 860px; margin: 40px auto; padding: 0 24px; }
+    .search-box {
+      background: #161b22; border: 1px solid #30363d; border-radius: 12px;
+      padding: 24px; margin-bottom: 28px;
+    }
+    .search-box label { display: block; font-size: 13px; color: #8b949e; margin-bottom: 8px; }
+    .input-row { display: flex; gap: 10px; }
+    textarea {
+      flex: 1; background: #0d1117; border: 1px solid #30363d; border-radius: 8px;
+      color: #e6edf3; font-size: 15px; padding: 12px 14px; resize: vertical;
+      min-height: 72px; outline: none; font-family: inherit;
+    }
+    textarea:focus { border-color: #58a6ff; }
+    .btn {
+      background: #238636; color: #fff; border: none; border-radius: 8px;
+      padding: 12px 22px; font-size: 15px; cursor: pointer; align-self: flex-end;
+      white-space: nowrap; transition: background 0.15s;
+    }
+    .btn:hover { background: #2ea043; }
+    .btn:disabled { background: #21262d; color: #484f58; cursor: not-allowed; }
+    .spinner {
+      display: none; text-align: center; padding: 32px;
+      color: #58a6ff; font-size: 14px;
+    }
+    .spinner.active { display: block; }
+    .answer-box {
+      background: #161b22; border: 1px solid #30363d; border-radius: 12px;
+      padding: 24px; margin-bottom: 24px; display: none;
+    }
+    .answer-box.active { display: block; }
+    .answer-box h3 { color: #58a6ff; font-size: 14px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: .5px; }
+    .answer-text { line-height: 1.7; white-space: pre-wrap; font-size: 15px; }
+    .sources-section h3 {
+      color: #8b949e; font-size: 13px; text-transform: uppercase;
+      letter-spacing: .5px; margin-bottom: 12px;
+    }
+    .source-card {
+      background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+      padding: 14px 16px; margin-bottom: 10px; display: flex;
+      justify-content: space-between; align-items: center;
+    }
+    .source-card .key { color: #58a6ff; font-weight: 600; font-size: 14px; }
+    .source-card .summary { color: #c9d1d9; font-size: 14px; margin-top: 2px; }
+    .source-card .right { text-align: right; }
+    .badge {
+      display: inline-block; padding: 2px 10px; border-radius: 20px;
+      font-size: 12px; font-weight: 500;
+    }
+    .badge-done    { background: #1f6feb22; color: #58a6ff; border: 1px solid #1f6feb55; }
+    .badge-todo    { background: #21262d; color: #8b949e; border: 1px solid #30363d; }
+    .badge-prog    { background: #3d200522; color: #f0883e; border: 1px solid #f0883e55; }
+    .sim { font-size: 12px; color: #8b949e; margin-top: 4px; }
+    .tickets-panel { margin-top: 40px; }
+    .tickets-panel h2 { font-size: 16px; color: #8b949e; margin-bottom: 14px; }
+    .ticket-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 14px; border-bottom: 1px solid #21262d; font-size: 14px;
+    }
+    .ticket-row:last-child { border-bottom: none; }
+    .ticket-row .key { color: #58a6ff; min-width: 90px; }
+    .ticket-row .ts  { color: #484f58; font-size: 12px; }
+    .empty { color: #484f58; font-size: 14px; text-align: center; padding: 20px; }
+    .error { color: #f85149; font-size: 14px; padding: 12px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">Jira RAG</div>
+    <div class="sub">Query your updated Jira tickets with AI</div>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="search-box">
+    <label>Ask a question about your Jira tickets</label>
+    <div class="input-row">
+      <textarea id="queryInput" placeholder="e.g. What tickets moved to Done this week? What are the high priority open issues?"></textarea>
+      <button class="btn" id="askBtn" onclick="ask()">Ask AI</button>
+    </div>
+  </div>
+
+  <div class="spinner" id="spinner">Thinking...</div>
+
+  <div class="answer-box" id="answerBox">
+    <h3>Answer</h3>
+    <div class="answer-text" id="answerText"></div>
+  </div>
+
+  <div class="sources-section" id="sourcesSection" style="display:none">
+    <h3>Source Tickets</h3>
+    <div id="sourcesList"></div>
+  </div>
+
+  <div class="tickets-panel">
+    <h2>Indexed Tickets</h2>
+    <div id="ticketsList"><div class="empty">Loading...</div></div>
+  </div>
+
+</div>
+
+<script>
+  async function ask() {
+    const query = document.getElementById('queryInput').value.trim();
+    if (!query) return;
+
+    const btn = document.getElementById('askBtn');
+    btn.disabled = true;
+    document.getElementById('spinner').classList.add('active');
+    document.getElementById('answerBox').classList.remove('active');
+    document.getElementById('sourcesSection').style.display = 'none';
+
+    try {
+      const res = await fetch('/api/query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, topK: 5 })
+      });
+      const data = await res.json();
+
+      document.getElementById('answerText').textContent = data.answer || '';
+      document.getElementById('answerBox').classList.add('active');
+
+      if (data.sources && data.sources.length > 0) {
+        document.getElementById('sourcesSection').style.display = 'block';
+        document.getElementById('sourcesList').innerHTML = data.sources.map(s => `
+          <div class="source-card">
+            <div>
+              <div class="key">${s.issueKey}</div>
+              <div class="summary">${s.summary || ''}</div>
+            </div>
+            <div class="right">
+              <span class="badge ${badgeClass(s.status)}">${s.status || 'Unknown'}</span>
+              <div class="sim">Match: ${(s.similarity * 100).toFixed(1)}%</div>
+            </div>
+          </div>`).join('');
+      }
+    } catch (e) {
+      document.getElementById('answerText').innerHTML = `<span class="error">Error: ${e.message}</span>`;
+      document.getElementById('answerBox').classList.add('active');
+    } finally {
+      btn.disabled = false;
+      document.getElementById('spinner').classList.remove('active');
+    }
+  }
+
+  function badgeClass(status) {
+    if (!status) return 'badge-todo';
+    const s = status.toLowerCase();
+    if (s.includes('done') || s.includes('closed') || s.includes('resolved')) return 'badge-done';
+    if (s.includes('progress') || s.includes('review')) return 'badge-prog';
+    return 'badge-todo';
+  }
+
+  async function loadTickets() {
+    try {
+      const res = await fetch('/api/tickets');
+      const tickets = await res.json();
+      const el = document.getElementById('ticketsList');
+      if (!tickets.length) {
+        el.innerHTML = '<div class="empty">No tickets indexed yet. Update a Jira ticket to trigger indexing.</div>';
+        return;
+      }
+      el.innerHTML = tickets.map(t => `
+        <div class="ticket-row">
+          <span class="key">${t.issue_key}</span>
+          <span>${t.summary || ''}</span>
+          <span class="badge ${badgeClass(t.status)}">${t.status || ''}</span>
+          <span class="ts">${t.indexed_at ? new Date(t.indexed_at).toLocaleString() : ''}</span>
+        </div>`).join('');
+    } catch (e) {
+      document.getElementById('ticketsList').innerHTML = `<div class="error">Could not load tickets</div>`;
+    }
+  }
+
+  document.getElementById('queryInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) ask();
+  });
+
+  loadTickets();
+  setInterval(loadTickets, 15000);
+</script>
+
+</body>
+</html>

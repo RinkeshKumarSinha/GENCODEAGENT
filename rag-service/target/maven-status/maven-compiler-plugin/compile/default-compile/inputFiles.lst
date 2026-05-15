@@ -1,0 +1,10 @@
+/Users/apple/Desktop/Hackathon/MPhasis/rag-service/src/main/java/com/mphasis/rag/RagApplication.java
+/Users/apple/Desktop/Hackathon/MPhasis/rag-service/src/main/java/com/mphasis/rag/config/BedrockConfig.java
+/Users/apple/Desktop/Hackathon/MPhasis/rag-service/src/main/java/com/mphasis/rag/model/KafkaJiraEvent.java
+/Users/apple/Desktop/Hackathon/MPhasis/rag-service/src/main/java/com/mphasis/rag/service/VectorStoreService.java
+/Users/apple/Desktop/Hackathon/MPhasis/rag-service/src/main/java/com/mphasis/rag/consumer/JiraEventConsumer.java
+/Users/apple/Desktop/Hackathon/MPhasis/rag-service/src/main/java/com/mphasis/rag/service/CodegenClientService.java
+/Users/apple/Desktop/Hackathon/MPhasis/rag-service/src/main/java/com/mphasis/rag/service/JiraFetchService.java
+/Users/apple/Desktop/Hackathon/MPhasis/rag-service/src/main/java/com/mphasis/rag/controller/QueryController.java
+/Users/apple/Desktop/Hackathon/MPhasis/rag-service/src/main/java/com/mphasis/rag/service/EmbeddingService.java
+/Users/apple/Desktop/Hackathon/MPhasis/rag-service/src/main/java/com/mphasis/rag/service/RagQueryService.java

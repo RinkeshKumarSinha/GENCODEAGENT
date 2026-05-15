@@ -1,0 +1,29 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: codegen-service
+
+# --- RAG Service ---
+rag:
+  service-url: http://localhost:8081
+
+# --- Jira ---
+jira:
+  base-url: https://rinkeshkumar0078.atlassian.net
+  email: rinkeshkumar0078@gmail.com
+  api-token: ATATT3xFfGF0YyJftJzGMg0ftm-Ud2V74Cso8s8jx2eube8aC0TnP0vkOcwUN4laJvQH45KR2yEPKYegFDgnJ6CNBZX-W2Qpx9gKLU0aHk-56Jh7HvoJCr9Vr7GsAUW6DCTOl9NbQIJNS9dgYop46Ugv5XjQEo6nBGinJQ0uCFe0yAGb4FUG9R8=03CA3F71
+
+# --- Groq ---
+groq:
+  api-key: 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
+  model: llama-3.3-70b-versatile
+
+# --- Bitbucket Cloud ---
+bitbucket:
+  workspace: nammahelpworkspace
+  email: rinkeshkumar0078@gmail.com
+  app-password: ATATT3xFfGF0-3RDLwA_HH_O0w2oS3JDlIrEIh0fA1hNRFYNmO5CDdtJWV-SM25bH_ixYMKMKdnfy-yZ37T71nARwG8HO5wq1PRzcb-S9bLsBNkEO4LfDCImW5fkdwXQ081X20riCULfHh4BDNCnSe4Lcv5RjS1as8iTFXdtbfStP8x6TY0YnmM=54F3BED2
+  destination-branch: master
+  project-repo-map: "{SCRUM: 'NammaHelpApiV1'}"

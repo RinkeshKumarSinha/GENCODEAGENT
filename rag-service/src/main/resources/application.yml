@@ -1,0 +1,50 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: rag-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ragdb
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      properties:
+        spring.json.trusted.packages: "com.mphasis.rag.model"
+        spring.json.value.default.type: "com.mphasis.rag.model.KafkaJiraEvent"
+
+app:
+  kafka:
+    topic: jira.issue.events
+
+# --- Jira ---
+jira:
+  base-url: https://rinkeshkumar0078.atlassian.net  # e.g. https://mycompany.atlassian.net
+  email: rinkeshkumar0078@gmail.com
+  api-token: ATATT3xFfGF0YyJftJzGMg0ftm-Ud2V74Cso8s8jx2eube8aC0TnP0vkOcwUN4laJvQH45KR2yEPKYegFDgnJ6CNBZX-W2Qpx9gKLU0aHk-56Jh7HvoJCr9Vr7GsAUW6DCTOl9NbQIJNS9dgYop46Ugv5XjQEo6nBGinJQ0uCFe0yAGb4FUG9R8=03CA3F71
+# --- Groq (free LLM, no credit card needed) ---
+groq:
+  api-key: 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
+  model: llama-3.3-70b-versatile
+
+# --- Codegen Service ---
+codegen:
+  service-url: http://localhost:8082
+
+# --- HuggingFace (free embeddings) ---
+huggingface:
+  api-token: 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
+  model: BAAI/bge-small-en-v1.5
