@@ -1,4 +1,4 @@
-# MPhasis — AI-Driven Software Development Automation
+# Lulies CODEGENAGENT — AI-Driven Software Development Automation
 
 An end-to-end system that automates the software development lifecycle by listening to Jira ticket events, enriching them with AI, storing semantic embeddings for intelligent search, and automatically generating code and raising Pull Requests on Bitbucket.
 
